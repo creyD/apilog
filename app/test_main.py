@@ -239,3 +239,24 @@ class TestAPI:
             re = self.c.get("/log/?application=" + app_id + "&environment=prod")
             assert re["total"] == 2
             assert len(re["results"]) == 2
+
+    def test_logging_delete(self):
+        with log_examples(self) as app_id:
+            re = self.c.delete("/log/?application=" + str(app_id) + "&environment=prod", r_code=200)
+            assert re == 2
+
+            re = self.c.get("/log/?application=" + str(app_id) + "&environment=prod")
+            assert re["total"] == 0
+
+            re = self.c.get("/log/?application=" + str(app_id) + "&environment=dev")
+            assert re["total"] == 3
+
+            # clear complete application
+            re = self.c.get("/log/?application=" + str(app_id))
+            assert re["total"] == 3
+
+            re = self.c.delete("/log/?application=" + str(app_id), r_code=200)
+            assert re == 3
+
+            re = self.c.get("/log/?application=" + str(app_id))
+            assert re["total"] == 0

@@ -8,6 +8,7 @@ from creyPY.fastapi.db.session import get_db
 from fastapi import APIRouter, Depends, Security, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+from sqlalchemy import delete
 from app.services.auth import verify
 from app.schema.entry import LogIN, LogOUT
 from app.models.entry import LogEntry
@@ -17,6 +18,8 @@ from uuid import UUID
 from pydantic.json_schema import SkipJsonSchema
 from fastapi_filters import FilterValues, create_filters
 from fastapi_filters.ext.sqlalchemy import apply_filters
+from app.models.entry import LogType, TransactionType
+from datetime import datetime
 
 router = APIRouter(prefix="/log", tags=["logging"])
 
@@ -62,10 +65,6 @@ async def get_log(
     return LogOUT.model_validate(obj)
 
 
-from app.models.entry import LogType, TransactionType
-from datetime import datetime
-
-
 @router.get("/")
 async def get_logs(
     search: str | SkipJsonSchema[None] = None,
@@ -94,3 +93,37 @@ async def get_logs(
             LogEntry.message.ilike(f"%{search}%") | LogEntry.author.ilike(f"%{search}%")
         )
     return paginate(db, order_by_query(the_select))
+
+
+@router.delete("/", status_code=200)
+async def delete_logs(
+    application: UUID,
+    environment: str | SkipJsonSchema[None] = None,
+    l_type: LogType | SkipJsonSchema[None] = None,
+    t_type: TransactionType | SkipJsonSchema[None] = None,
+    object_reference: str | SkipJsonSchema[None] = None,
+    author: str | SkipJsonSchema[None] = None,
+    sub: str = Security(verify),
+    db: Session = Depends(get_db),
+) -> int:
+    filters = {
+        "application": application,
+        "created_by_id": sub,
+    }
+
+    if environment is not None:
+        filters["environment"] = environment
+    if l_type is not None:
+        filters["l_type"] = l_type
+    if t_type is not None:
+        filters["t_type"] = t_type
+    if object_reference is not None:
+        filters["object_reference"] = object_reference
+    if author is not None:
+        filters["author"] = author
+
+    query = db.query(LogEntry).filter_by(**filters)
+    the_impact = query.count()
+    query.delete(synchronize_session=False)
+    db.commit()
+    return the_impact
