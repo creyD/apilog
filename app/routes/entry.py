@@ -94,7 +94,7 @@ async def get_logs(
     return paginate(db, order_by_query(the_select))
 
 
-@router.delete("/", status_code=200)
+@router.delete("/", status_code=200, operation_id="log_delete_many")
 async def delete_logs(
     application: UUID,
     environment: str | SkipJsonSchema[None] = None,
