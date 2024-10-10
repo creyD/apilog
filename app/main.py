@@ -77,8 +77,10 @@ app.add_middleware(
 
 # App Routers
 from app.routes.app import router as app_router
+from app.routes.entry import router as entry_router
 
 app.include_router(app_router)
+app.include_router(entry_router)
 
 
 # Pagination

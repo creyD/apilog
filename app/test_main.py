@@ -6,10 +6,19 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
 
 from app.services.auth import verify
-
+import contextlib
 from .main import app
 
 CURRENT_USER = "api-key|testing"
+
+
+@contextlib.contextmanager
+def app_context(self):
+    app_id = self.create_app()
+    try:
+        yield app_id
+    finally:
+        self.destroy_app(app_id)
 
 
 class TestAPI:
@@ -34,7 +43,6 @@ class TestAPI:
 
         app.dependency_overrides[get_db] = get_db_test
         app.dependency_overrides[verify] = get_test_sub
-
         self.c = GenericClient(app)
 
     def teardown_class(self):
@@ -49,3 +57,29 @@ class TestAPI:
 
     def test_application_api(self):
         self.c.obj_lifecycle({"name": "Testing"}, "/app/")
+
+    def create_app(self):
+        re = self.c.post("/app/", {"name": "Testing"})
+        return re["id"]
+
+    def destroy_app(self, app_id):
+        self.c.delete(f"/app/{app_id}")
+
+    def test_log_api(self):
+        with app_context(self) as app_id:
+            self.c.obj_lifecycle({"application": app_id}, "/log/")
+
+    def test_logging_standards(self):
+        with app_context(self) as app_id:
+            re = self.c.post("/log/", {"application": app_id})
+            log_id = re["id"]
+            assert re["application"] == app_id
+            assert re["l_type"] == "info"
+            assert re["t_type"] == "undefined"
+            assert re["message"] == None
+            assert re["author"] == "system"
+            assert re["object_reference"] == None
+            assert re["previous_object"] == None
+            assert re["created_by_id"] == CURRENT_USER
+
+            self.c.delete(f"/log/{log_id}")
