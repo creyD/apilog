@@ -61,5 +61,8 @@ async def get_logs(
     sub: str = Security(verify),
     db: Session = Depends(get_db),
 ) -> Page[LogOUT]:
+    # add filters
+    # add sorting
+    # add search
     the_select = db.query(LogEntry).filter_by(created_by_id=sub)
     return paginate(the_select)

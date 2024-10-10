@@ -13,8 +13,8 @@ CURRENT_USER = "api-key|testing"
 
 
 @contextlib.contextmanager
-def app_context(self):
-    app_id = self.create_app()
+def app_context(self, name: str = "Testing"):
+    app_id = self.create_app(name)
     try:
         yield app_id
     finally:
@@ -58,8 +58,23 @@ class TestAPI:
     def test_application_api(self):
         self.c.obj_lifecycle({"name": "Testing"}, "/app/")
 
-    def create_app(self):
-        re = self.c.post("/app/", {"name": "Testing"})
+    def test_application_search(self):
+        with app_context(self, "testing 1") as app_id1:
+            with app_context(self, "second app 2") as app_id2:
+                re = self.c.get("/app/")
+                assert re["total"] == 2
+                assert len(re["results"]) == 2
+
+                re = self.c.get("/app/?search=testing")
+                assert re["total"] == 1
+                assert len(re["results"]) == 1
+
+                re = self.c.get("/app/?search=2")
+                assert re["total"] == 1
+                assert len(re["results"]) == 1
+
+    def create_app(self, name: str = "Testing"):
+        re = self.c.post("/app/", {"name": name})
         return re["id"]
 
     def destroy_app(self, app_id):

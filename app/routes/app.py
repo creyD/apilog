@@ -4,13 +4,14 @@ from creyPY.fastapi.crud import (
 from creyPY.fastapi.db.session import get_db
 from fastapi import APIRouter, Depends, Security, HTTPException
 from sqlalchemy.orm import Session
-
+from pydantic.json_schema import SkipJsonSchema
 from app.services.auth import verify
 from app.schema.app import AppIN, AppOUT
 from app.models.app import Application
-from fastapi_pagination.ext.sqlalchemy import paginate
 from creyPY.fastapi.pagination import Page
 from uuid import UUID
+from fastapi_pagination.ext.sqlalchemy import paginate
+from sqlalchemy import select
 
 router = APIRouter(prefix="/app", tags=["apps"])
 
@@ -46,11 +47,14 @@ async def delete_app(
 
 @router.get("/")
 async def get_apps(
+    search: str | SkipJsonSchema[None] = None,
     sub: str = Security(verify),
     db: Session = Depends(get_db),
 ) -> Page[AppOUT]:
-    the_select = db.query(Application).filter_by(created_by_id=sub)
-    return paginate(the_select)
+    the_select = select(Application).filter(Application.created_by_id == sub)
+    if search:
+        the_select = the_select.filter(Application.name.ilike(f"%{search}%"))
+    return paginate(db, the_select)
 
 
 @router.get("/{app_id}")
