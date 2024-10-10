@@ -6,6 +6,7 @@ from pydantic.json_schema import SkipJsonSchema
 
 class LogIN(BaseSchemaModelIN):
     application: UUID
+    environment: str = "prod"
     l_type: LogType = LogType.INFO
     t_type: TransactionType = TransactionType.UNDEFINED
 

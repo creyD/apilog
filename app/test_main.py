@@ -24,14 +24,25 @@ def app_context(self, name: str = "Testing"):
 @contextlib.contextmanager
 def log_examples(self):
     LOG_EXAMPLES = [
-        {"l_type": "info", "t_type": "create", "message": "User Max Mustermann created"},
-        {"l_type": "info", "t_type": "update", "message": "User Max Mustermann updated"},
+        {
+            "l_type": "info",
+            "t_type": "create",
+            "message": "User Max Mustermann created",
+            "environment": "dev",
+        },
+        {
+            "l_type": "info",
+            "t_type": "update",
+            "message": "User Max Mustermann updated",
+            "environment": "dev",
+        },
         {
             "l_type": "info",
             "t_type": "create",
             "author": "auth|max_muster",
             "message": "User Max Mustermann created a Unit",
             "object_reference": "1",
+            "environment": "dev",
         },
         {
             "l_type": "info",
@@ -40,8 +51,14 @@ def log_examples(self):
             "message": "User Max Mustermann updated Unit 1",
             "object_reference": "1",
             "previous_object": {"name": "Unit 1"},
+            "environment": "prod",
         },
-        {"l_type": "warning", "t_type": "delete", "message": "User Max Mustermann deleted"},
+        {
+            "l_type": "warning",
+            "t_type": "delete",
+            "message": "User Max Mustermann deleted",
+            "environment": "prod",
+        },
     ]
     with app_context(self) as app_id:
         for entry in LOG_EXAMPLES:
@@ -129,6 +146,7 @@ class TestAPI:
             assert re["t_type"] == "undefined"
             assert re["message"] == None
             assert re["author"] == "system"
+            assert re["environment"] == "prod"
             assert re["object_reference"] == None
             assert re["previous_object"] == None
             assert re["created_by_id"] == CURRENT_USER
@@ -211,3 +229,13 @@ class TestAPI:
             re = self.c.get("/log/?author%5Bne%5D=auth|max_muster")
             assert re["total"] == 3
             assert len(re["results"]) == 3
+
+            # environment
+            re = self.c.get("/log/?environment=dev")
+            assert re["total"] == 3
+            assert len(re["results"]) == 3
+
+            # application and environment
+            re = self.c.get("/log/?application=" + app_id + "&environment=prod")
+            assert re["total"] == 2
+            assert len(re["results"]) == 2

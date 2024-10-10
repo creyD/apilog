@@ -73,6 +73,7 @@ async def get_logs(
     filters: FilterValues = Depends(
         create_filters(
             created_by_id=str,
+            environment=str,
             l_type=LogType,
             t_type=TransactionType,
             application=UUID,

@@ -23,6 +23,7 @@ class LogEntry(Base):
     application = Column(
         UUID(as_uuid=True), ForeignKey("application.id", ondelete="CASCADE"), nullable=False
     )
+    environment = Column(String(64), nullable=True, default="prod")
     # type of the log entry
     l_type = Column(Enum(LogType), nullable=False, default=LogType.INFO)
     # type of the transaction
