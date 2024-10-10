@@ -8,7 +8,6 @@ from creyPY.fastapi.db.session import get_db
 from fastapi import APIRouter, Depends, Security, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from sqlalchemy import delete
 from app.services.auth import verify
 from app.schema.entry import LogIN, LogOUT
 from app.models.entry import LogEntry
