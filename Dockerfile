@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 RUN pip install 'uvicorn[standard]'
 
 EXPOSE 9000
-CMD ["uvicorn", "app.main:app", "-w", "6" , "--host", "0.0.0.0", "--port", "9000"]
+CMD ["uvicorn", "app.main:app", "--workers", "6" , "--host", "0.0.0.0", "--port", "9000"]
 
 # Install curl
 RUN apt-get update && apt-get install -y curl && apt-get clean
