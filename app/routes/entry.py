@@ -4,13 +4,14 @@ from creyPY.fastapi.crud import (
 from creyPY.fastapi.db.session import get_db
 from fastapi import APIRouter, Depends, Security, HTTPException
 from sqlalchemy.orm import Session
-
+from sqlalchemy import select
 from app.services.auth import verify
 from app.schema.entry import LogIN, LogOUT
 from app.models.entry import LogEntry
 from fastapi_pagination.ext.sqlalchemy import paginate
 from creyPY.fastapi.pagination import Page
 from uuid import UUID
+from pydantic.json_schema import SkipJsonSchema
 
 router = APIRouter(prefix="/log", tags=["logging"])
 
@@ -58,11 +59,18 @@ async def get_log(
 
 @router.get("/")
 async def get_logs(
+    search: str | SkipJsonSchema[None] = None,
     sub: str = Security(verify),
     db: Session = Depends(get_db),
 ) -> Page[LogOUT]:
+    """
+    Filter logs of your systems. Searching works only for author and message. Use filters for the rest.
+    """
     # add filters
     # add sorting
-    # add search
-    the_select = db.query(LogEntry).filter_by(created_by_id=sub)
-    return paginate(the_select)
+    the_select = select(LogEntry).filter(LogEntry.created_by_id == sub)
+    if search:
+        the_select = the_select.filter(
+            LogEntry.message.ilike(f"%{search}%") | LogEntry.author.ilike(f"%{search}%")
+        )
+    return paginate(db, the_select)
