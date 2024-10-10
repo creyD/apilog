@@ -2,7 +2,7 @@ from creyPY.fastapi.crud import (
     create_obj_from_data,
 )
 from creyPY.fastapi.order_by import order_by
-from typing import Any, Callable
+from typing import Callable
 from sqlalchemy.sql.selectable import Select
 from creyPY.fastapi.db.session import get_db
 from fastapi import APIRouter, Depends, Security, HTTPException
@@ -15,6 +15,8 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 from creyPY.fastapi.pagination import Page
 from uuid import UUID
 from pydantic.json_schema import SkipJsonSchema
+from fastapi_filters import FilterValues, create_filters
+from fastapi_filters.ext.sqlalchemy import apply_filters
 
 router = APIRouter(prefix="/log", tags=["logging"])
 
@@ -60,19 +62,32 @@ async def get_log(
     return LogOUT.model_validate(obj)
 
 
+from app.models.entry import LogType, TransactionType
+from datetime import datetime
+
+
 @router.get("/")
 async def get_logs(
     search: str | SkipJsonSchema[None] = None,
     order_by_query: Callable[[Select], Select] = Depends(order_by),
+    filters: FilterValues = Depends(
+        create_filters(
+            created_by_id=str,
+            l_type=LogType,
+            t_type=TransactionType,
+            application=UUID,
+            object_reference=str,
+            author=str,
+            created_at=datetime,
+        )
+    ),
     sub: str = Security(verify),
     db: Session = Depends(get_db),
 ) -> Page[LogOUT]:
     """
     Filter logs of your systems. Searching works only for author and message. Use filters for the rest.
     """
-    # add filters
-    # add sorting
-    the_select = select(LogEntry).filter(LogEntry.created_by_id == sub)
+    the_select = apply_filters(select(LogEntry).filter(LogEntry.created_by_id == sub), filters)
     if search:
         the_select = the_select.filter(
             LogEntry.message.ilike(f"%{search}%") | LogEntry.author.ilike(f"%{search}%")

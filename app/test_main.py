@@ -41,7 +41,7 @@ def log_examples(self):
             "object_reference": "1",
             "previous_object": {"name": "Unit 1"},
         },
-        {"l_type": "info", "t_type": "delete", "message": "User Max Mustermann deleted"},
+        {"l_type": "warning", "t_type": "delete", "message": "User Max Mustermann deleted"},
     ]
     with app_context(self) as app_id:
         for entry in LOG_EXAMPLES:
@@ -165,5 +165,49 @@ class TestAPI:
             assert len(re["results"]) == 5
             assert re["results"][0]["created_at"] > re["results"][1]["created_at"]
 
-    # def test_logging_filter(self):
-    #     pass
+    def test_logging_filter(self):
+        with log_examples(self) as app_id:
+            # API KEY
+            re = self.c.get("/log/?created_by_id=" + CURRENT_USER)
+            assert re["total"] == 5
+            assert len(re["results"]) == 5
+
+            # LogType
+            re = self.c.get("/log/?l_type=info")
+            assert re["total"] == 4
+            assert len(re["results"]) == 4
+
+            # TransactionType
+            re = self.c.get("/log/?t_type=create")
+            assert re["total"] == 2
+            assert len(re["results"]) == 2
+
+            # TransactipnType create and update
+            re = self.c.get("/log/?t_type%5Bin%5D=create,update")
+            assert re["total"] == 4
+            assert len(re["results"]) == 4
+
+            # Application
+            re = self.c.get("/log/?application=" + app_id)
+            assert re["total"] == 5
+            assert len(re["results"]) == 5
+
+            # Application not
+            re = self.c.get("/log/?application%5Bne%5D=" + app_id)
+            assert re["total"] == 0
+            assert len(re["results"]) == 0
+
+            # Object Reference
+            re = self.c.get("/log/?object_reference=1")
+            assert re["total"] == 2
+            assert len(re["results"]) == 2
+
+            # author
+            re = self.c.get("/log/?author=auth|max_muster")
+            assert re["total"] == 2
+            assert len(re["results"]) == 2
+
+            # not author
+            re = self.c.get("/log/?author%5Bne%5D=auth|max_muster")
+            assert re["total"] == 3
+            assert len(re["results"]) == 3
