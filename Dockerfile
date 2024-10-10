@@ -1,30 +1,24 @@
-FROM python:3.12-slim AS builder
-WORKDIR /build
-COPY requirements.txt .
-RUN pip  wheel --no-cache-dir --wheel-dir=/build/wheels \
-    -r requirements.txt \
-
 FROM python:3.12-slim
+ARG VERSION=unkown
 
 WORKDIR /app
 COPY . .
 
-RUN apt-get update && apt-get install -y curl git
-
-COPY --from=builder /build/wheels /wheels
-RUN pip install --no-cache /wheels/*
-
-# Remove the wheels directory after installation to save space
-RUN rm -rf /wheels
 # Python setup
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-
-ARG VERSION=unknown
 ENV VERSION=${VERSION}
+ENV ENV=DEV
 
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "6" , "-b", "0.0.0.0:9000","app.main:app"]
+# Install dependencies
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+RUN pip install 'uvicorn[standard]'
+
 EXPOSE 9000
+CMD ["uvicorn", "app.main:app", "-w", "6" , "--host", "0.0.0.0", "--port", "9000"]
+
+# Install curl
+RUN apt-get update && apt-get install -y curl && apt-get clean
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=5 \
   CMD curl --fail http://localhost:9000/openapi.json || exit 1
