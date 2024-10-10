@@ -1,6 +1,9 @@
 from creyPY.fastapi.crud import (
     create_obj_from_data,
 )
+from creyPY.fastapi.order_by import order_by
+from typing import Any, Callable
+from sqlalchemy.sql.selectable import Select
 from creyPY.fastapi.db.session import get_db
 from fastapi import APIRouter, Depends, Security, HTTPException
 from sqlalchemy.orm import Session
@@ -60,6 +63,7 @@ async def get_log(
 @router.get("/")
 async def get_logs(
     search: str | SkipJsonSchema[None] = None,
+    order_by_query: Callable[[Select], Select] = Depends(order_by),
     sub: str = Security(verify),
     db: Session = Depends(get_db),
 ) -> Page[LogOUT]:
@@ -73,4 +77,4 @@ async def get_logs(
         the_select = the_select.filter(
             LogEntry.message.ilike(f"%{search}%") | LogEntry.author.ilike(f"%{search}%")
         )
-    return paginate(db, the_select)
+    return paginate(db, order_by_query(the_select))

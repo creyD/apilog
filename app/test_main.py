@@ -21,6 +21,34 @@ def app_context(self, name: str = "Testing"):
         self.destroy_app(app_id)
 
 
+@contextlib.contextmanager
+def log_examples(self):
+    LOG_EXAMPLES = [
+        {"l_type": "info", "t_type": "create", "message": "User Max Mustermann created"},
+        {"l_type": "info", "t_type": "update", "message": "User Max Mustermann updated"},
+        {
+            "l_type": "info",
+            "t_type": "create",
+            "author": "auth|max_muster",
+            "message": "User Max Mustermann created a Unit",
+            "object_reference": "1",
+        },
+        {
+            "l_type": "info",
+            "t_type": "update",
+            "author": "auth|max_muster",
+            "message": "User Max Mustermann updated Unit 1",
+            "object_reference": "1",
+            "previous_object": {"name": "Unit 1"},
+        },
+        {"l_type": "info", "t_type": "delete", "message": "User Max Mustermann deleted"},
+    ]
+    with app_context(self) as app_id:
+        for entry in LOG_EXAMPLES:
+            self.log_message({"application": app_id, **entry})
+        yield app_id
+
+
 class TestAPI:
     def setup_class(self):
         self.engine = create_engine(SQLALCHEMY_DATABASE_URL + "test", pool_pre_ping=True)
@@ -48,6 +76,19 @@ class TestAPI:
     def teardown_class(self):
         drop_database(self.engine.url)
 
+    # HELPERS
+    def create_app(self, name: str = "Testing"):
+        re = self.c.post("/app/", {"name": name})
+        return re["id"]
+
+    def destroy_app(self, app_id):
+        self.c.delete(f"/app/{app_id}")
+
+    def log_message(self, entry_obj):
+        re = self.c.post("/log/", entry_obj)
+        return re["id"]
+
+    # GENERIC TEST CASES
     def test_swagger_gen(self):
         re = self.c.get("/openapi.json")
         assert re["info"]["title"] == "ApiLog API"
@@ -55,6 +96,7 @@ class TestAPI:
     def test_health_check(self):
         self.c.get("/", parse_json=False)
 
+    # TESTS for module application
     def test_application_api(self):
         self.c.obj_lifecycle({"name": "Testing"}, "/app/")
 
@@ -73,13 +115,7 @@ class TestAPI:
                 assert re["total"] == 1
                 assert len(re["results"]) == 1
 
-    def create_app(self, name: str = "Testing"):
-        re = self.c.post("/app/", {"name": name})
-        return re["id"]
-
-    def destroy_app(self, app_id):
-        self.c.delete(f"/app/{app_id}")
-
+    # TESTS for module log
     def test_log_api(self):
         with app_context(self) as app_id:
             self.c.obj_lifecycle({"application": app_id}, "/log/")
@@ -98,3 +134,36 @@ class TestAPI:
             assert re["created_by_id"] == CURRENT_USER
 
             self.c.delete(f"/log/{log_id}")
+
+    def test_logging_search(self):
+        with log_examples(self) as app_id:
+            re = self.c.get("/log/")
+            assert re["total"] == 5
+            assert len(re["results"]) == 5
+
+            re = self.c.get("/log/?search=auth|max_muster")
+            assert re["total"] == 2
+            assert len(re["results"]) == 2
+
+            re = self.c.get("/log/?search=system")
+            assert re["total"] == 3
+            assert len(re["results"]) == 3
+
+            re = self.c.get("/log/?search=created%20a%20Unit")
+            assert re["total"] == 1
+            assert len(re["results"]) == 1
+
+    def test_logging_order(self):
+        with log_examples(self) as app_id:
+            re = self.c.get("/log/?order_by=created_at")
+            assert re["total"] == 5
+            assert len(re["results"]) == 5
+            assert re["results"][0]["created_at"] < re["results"][1]["created_at"]
+
+            re = self.c.get("/log/?order_by=-created_at")
+            assert re["total"] == 5
+            assert len(re["results"]) == 5
+            assert re["results"][0]["created_at"] > re["results"][1]["created_at"]
+
+    # def test_logging_filter(self):
+    #     pass
