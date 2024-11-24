@@ -5,7 +5,7 @@ creyPY==1.2.5
 fastapi==0.115.5
 fastapi-pagination==0.12.31
 h11==0.14.0
-httpcore==1.0.6
+httpcore==1.0.7
 httpx==0.27.2
 idna==3.10
 psycopg==3.2.3
