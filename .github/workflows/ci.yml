@@ -13,6 +13,10 @@ on:
       - "**/CHANGELOG.md"
       - "**/docs/**"
   workflow_dispatch:
+  pull_request:
+    branches:
+      - dev
+      - master
 
 env:
   REGISTRY: ghcr.io
