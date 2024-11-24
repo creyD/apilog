@@ -18,7 +18,6 @@ ENV ENV=DEV
 
 # Install dependencies
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
-RUN pip install 'uvicorn[standard]'
 
 # Switch to the non-root user
 USER appuser
