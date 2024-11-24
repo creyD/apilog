@@ -18,7 +18,7 @@ EXPOSE 9000
 CMD ["uvicorn", "app.main:app", "--workers", "6" , "--host", "0.0.0.0", "--port", "9000"]
 
 # Install curl
-RUN apt-get update && apt-get install -y curl && apt-get clean
+RUN apt-get update && apt-get install -y --no-install-recommends curl && apt-get clean
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=5 \
   CMD curl --fail http://localhost:9000/openapi.json || exit 1
