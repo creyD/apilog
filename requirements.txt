@@ -1,7 +1,7 @@
 annotated-types==0.7.0
 anyio==4.6.2.post1
 certifi==2024.8.30
-creyPY==1.2.5
+creyPY==1.3.0
 fastapi==0.115.5
 fastapi-pagination==0.12.31
 h11==0.14.0
