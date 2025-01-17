@@ -1,7 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    ":semanticCommitTypeAll(feat)"
+  "extends": ["config:recommended", ":semanticCommitTypeAll(feat)"],
+  "packageRules": [
+      {
+          "automerge": true,
+          "description": "Automerge non-major updates",
+          "matchUpdateTypes": ["minor", "patch"],
+          "automergeType": "branch"
+      }
   ]
 }

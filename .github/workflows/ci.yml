@@ -5,6 +5,7 @@ on:
     branches:
       - dev
       - master
+      - renovate/**
     paths-ignore:
       - "**/.github/**"
       - "**/.gitignore"
