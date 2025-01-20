@@ -1,8 +1,8 @@
-from creyPY.fastapi.models.base import Base
-from sqlalchemy import Column, String, ForeignKey, Enum, JSON
-from sqlalchemy.dialects.postgresql import UUID
-
 from enum import Enum as pyenum
+
+from creyPY.fastapi.models.base import Base
+from sqlalchemy import JSON, Column, Enum, ForeignKey, String
+from sqlalchemy.dialects.postgresql import UUID
 
 
 class TransactionType(pyenum):
