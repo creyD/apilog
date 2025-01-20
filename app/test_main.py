@@ -1,3 +1,6 @@
+import contextlib
+from datetime import datetime, timedelta
+
 from creyPY.fastapi.db.session import SQLALCHEMY_DATABASE_URL, get_db
 from creyPY.fastapi.models.base import Base
 from creyPY.fastapi.testing import GenericClient
@@ -5,16 +8,55 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
 
+from app.models.entry import LogEntry
 from app.services.auth import verify
-import contextlib
+from app.setup import delete_old_logs
+
 from .main import app
 
 CURRENT_USER = "api-key|testing"
+ENTRY_EXAMPLES = [
+    {
+        "l_type": "info",
+        "t_type": "create",
+        "message": "User Max Mustermann created",
+        "environment": "dev",
+    },
+    {
+        "l_type": "info",
+        "t_type": "update",
+        "message": "User Max Mustermann updated",
+        "environment": "dev",
+    },
+    {
+        "l_type": "info",
+        "t_type": "create",
+        "author": "auth|max_muster",
+        "message": "User Max Mustermann created a Unit",
+        "object_reference": "1",
+        "environment": "dev",
+    },
+    {
+        "l_type": "info",
+        "t_type": "update",
+        "author": "auth|max_muster",
+        "message": "User Max Mustermann updated Unit 1",
+        "object_reference": "1",
+        "previous_object": {"name": "Unit 1"},
+        "environment": "prod",
+    },
+    {
+        "l_type": "warning",
+        "t_type": "delete",
+        "message": "User Max Mustermann deleted",
+        "environment": "prod",
+    },
+]
 
 
 @contextlib.contextmanager
-def app_context(self, name: str = "Testing"):
-    app_id = self.create_app(name)
+def app_context(self, name: str = "Testing", retention_days: int | None = None):
+    app_id = self.create_app(name, retention_days)
     try:
         yield app_id
     finally:
@@ -23,45 +65,8 @@ def app_context(self, name: str = "Testing"):
 
 @contextlib.contextmanager
 def log_examples(self):
-    LOG_EXAMPLES = [
-        {
-            "l_type": "info",
-            "t_type": "create",
-            "message": "User Max Mustermann created",
-            "environment": "dev",
-        },
-        {
-            "l_type": "info",
-            "t_type": "update",
-            "message": "User Max Mustermann updated",
-            "environment": "dev",
-        },
-        {
-            "l_type": "info",
-            "t_type": "create",
-            "author": "auth|max_muster",
-            "message": "User Max Mustermann created a Unit",
-            "object_reference": "1",
-            "environment": "dev",
-        },
-        {
-            "l_type": "info",
-            "t_type": "update",
-            "author": "auth|max_muster",
-            "message": "User Max Mustermann updated Unit 1",
-            "object_reference": "1",
-            "previous_object": {"name": "Unit 1"},
-            "environment": "prod",
-        },
-        {
-            "l_type": "warning",
-            "t_type": "delete",
-            "message": "User Max Mustermann deleted",
-            "environment": "prod",
-        },
-    ]
     with app_context(self) as app_id:
-        for entry in LOG_EXAMPLES:
+        for entry in ENTRY_EXAMPLES:
             self.log_message({"application": app_id, **entry})
         yield app_id
 
@@ -86,6 +91,7 @@ class TestAPI:
             global CURRENT_USER
             return CURRENT_USER
 
+        self.db_instance = get_db_test()
         app.dependency_overrides[get_db] = get_db_test
         app.dependency_overrides[verify] = get_test_sub
         self.c = GenericClient(app)
@@ -94,8 +100,8 @@ class TestAPI:
         drop_database(self.engine.url)
 
     # HELPERS
-    def create_app(self, name: str = "Testing"):
-        re = self.c.post("/app/", {"name": name})
+    def create_app(self, name: str = "Testing", retention_days: int | None = None):
+        re = self.c.post("/app/", {"name": name, "retention_days": retention_days})
         return re["id"]
 
     def destroy_app(self, app_id):
@@ -260,3 +266,29 @@ class TestAPI:
 
             re = self.c.get("/log/?application=" + str(app_id))
             assert re["total"] == 0
+
+    def test_retention_delete(self):
+        sess = next(self.db_instance)
+
+        with app_context(self, retention_days=2) as app_id:
+            for i in range(5):
+                sess.add(
+                    LogEntry(
+                        application=app_id,
+                        created_at=datetime.now() - timedelta(days=i),
+                        created_by_id=CURRENT_USER,
+                    )
+                )
+            sess.commit()
+
+            assert sess.query(LogEntry).count() == 5
+
+            re = self.c.get("/log/?application=" + str(app_id))
+            assert re["total"] == 5
+
+            delete_old_logs(sess)
+
+            assert sess.query(LogEntry).count() == 2
+
+            # delete all logs
+            re = self.c.delete("/log/?application=" + str(app_id), r_code=200)
