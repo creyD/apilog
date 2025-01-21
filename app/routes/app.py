@@ -1,17 +1,16 @@
-from creyPY.fastapi.crud import (
-    create_obj_from_data,
-)
-from creyPY.fastapi.db.session import get_db
-from fastapi import APIRouter, Depends, Security, HTTPException
-from sqlalchemy.orm import Session
-from pydantic.json_schema import SkipJsonSchema
-from app.services.auth import verify
-from app.schema.app import AppIN, AppOUT
-from app.models.app import Application
-from creyPY.fastapi.pagination import Page
 from uuid import UUID
-from fastapi_pagination.ext.sqlalchemy import paginate
+
+from creyPY.fastapi.crud import create_obj_from_data
+from creyPY.fastapi.db.session import get_db
+from creyPY.fastapi.pagination import Page, paginate
+from fastapi import APIRouter, Depends, HTTPException, Security
+from pydantic.json_schema import SkipJsonSchema
 from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.models.app import Application
+from app.schema.app import AppIN, AppOUT
+from app.services.auth import verify
 
 router = APIRouter(prefix="/app", tags=["apps"])
 
@@ -26,7 +25,7 @@ async def create_app(
         data,
         Application,
         db,
-        additonal_data={"created_by_id": sub},
+        additional_data={"created_by_id": sub},
     )
     return AppOUT.model_validate(obj)
 

@@ -1,24 +1,22 @@
-from creyPY.fastapi.crud import (
-    create_obj_from_data,
-)
-from creyPY.fastapi.order_by import order_by
+from datetime import datetime
 from typing import Callable
-from sqlalchemy.sql.selectable import Select
-from creyPY.fastapi.db.session import get_db
-from fastapi import APIRouter, Depends, Security, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-from app.services.auth import verify
-from app.schema.entry import LogIN, LogOUT
-from app.models.entry import LogEntry
-from fastapi_pagination.ext.sqlalchemy import paginate
-from creyPY.fastapi.pagination import Page
 from uuid import UUID
-from pydantic.json_schema import SkipJsonSchema
+
+from creyPY.fastapi.crud import create_obj_from_data
+from creyPY.fastapi.db.session import get_db
+from creyPY.fastapi.order_by import order_by
+from creyPY.fastapi.pagination import Page, paginate
+from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi_filters import FilterValues, create_filters
 from fastapi_filters.ext.sqlalchemy import apply_filters
-from app.models.entry import LogType, TransactionType
-from datetime import datetime
+from pydantic.json_schema import SkipJsonSchema
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from sqlalchemy.sql.selectable import Select
+
+from app.models.entry import LogEntry, LogType, TransactionType
+from app.schema.entry import LogIN, LogOUT
+from app.services.auth import verify
 
 router = APIRouter(prefix="/log", tags=["logging"])
 
@@ -33,7 +31,7 @@ async def create_log(
         data,
         LogEntry,
         db,
-        additonal_data={"created_by_id": sub},
+        additional_data={"created_by_id": sub},
     )
     return LogOUT.model_validate(obj)
 
