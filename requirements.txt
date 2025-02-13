@@ -36,4 +36,4 @@ pytest==8.3.4 # pytest
 fastapi-filters==0.2.9 # Filters
 
 APScheduler==3.11.0 # Scheduler for deletion
-tzlocal==5.2 # Scheduler for deletion
+tzlocal==5.3 # Scheduler for deletion
