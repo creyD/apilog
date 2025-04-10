@@ -17,7 +17,7 @@ python-dotenv==1.1.0
 sniffio==1.3.1
 SQLAlchemy==2.0.40
 starlette==0.46.1
-typing_extensions==4.13.1
+typing_extensions==4.13.2
 
 Mako==1.3.9 # Alembic
 MarkupSafe==3.0.1 # Alembic
