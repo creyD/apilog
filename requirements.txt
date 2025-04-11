@@ -33,7 +33,7 @@ packaging==24.1 # pytest
 pluggy==1.5.0 # pytest
 pytest==8.3.5 # pytest
 
-fastapi-filters==0.2.9 # Filters
+fastapi-filters==0.3.0 # Filters
 
 APScheduler==3.11.0 # Scheduler for deletion
 tzlocal==5.3.1 # Scheduler for deletion
