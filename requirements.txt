@@ -30,7 +30,7 @@ uvicorn==0.34.2 # Uvicorn
 
 iniconfig==2.1.0 # pytest
 packaging==25.0 # pytest
-pluggy==1.5.0 # pytest
+pluggy==1.6.0 # pytest
 pytest==8.3.5 # pytest
 
 fastapi-filters==0.3.0 # Filters
