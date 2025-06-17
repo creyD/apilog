@@ -2,7 +2,7 @@ annotated-types==0.7.0
 anyio==4.9.0
 certifi==2025.6.15
 creyPY[postgres]==3.0.0
-fastapi==0.115.12
+fastapi==0.115.13
 fastapi-pagination==0.13.2
 h11==0.14.0
 httpcore==1.0.8
