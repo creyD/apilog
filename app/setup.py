@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from creyPY.fastapi.db.helpers import create_if_not_exists
 from creyPY.fastapi.db.session import SQLALCHEMY_DATABASE_URL, get_db, name
 from sqlalchemy.orm import Session
 
@@ -9,7 +10,6 @@ from alembic import command
 from alembic.config import Config
 from app.models.app import Application
 from app.models.entry import LogEntry
-from app.services.db.session import create_if_not_exists
 
 
 def delete_old_logs(sess: Session | None = None):
