@@ -35,7 +35,7 @@ jobs:
       with:
         no_commit: True
         options: --in-place --remove-all-unused-imports -r --exclude **/__init__.py,**/db/models.py,
-    - uses: stefanzweifel/git-auto-commit-action@v5
+    - uses: stefanzweifel/git-auto-commit-action@v6
       with:
         commit_message: Adjusted files for isort & autopep
 
