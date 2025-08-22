@@ -91,7 +91,7 @@ jobs:
           git config --local user.name "creyD"
 
       - name: Git Version
-        uses: codacy/git-version@2.8.5
+        uses: codacy/git-version@2.8.6
         id: git_version
         with:
           minor-identifier: "feat:"
