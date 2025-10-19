@@ -28,7 +28,7 @@ SQLAlchemy-Utils==0.41.2 # SQLAlchemy
 click==8.3.0 # Uvicorn
 uvicorn==0.38.0 # Uvicorn
 
-iniconfig==2.1.0 # pytest
+iniconfig==2.3.0 # pytest
 packaging==25.0 # pytest
 pluggy==1.6.0 # pytest
 pytest==8.4.2 # pytest
