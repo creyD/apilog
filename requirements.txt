@@ -25,7 +25,7 @@ alembic==1.17.2 # Alembic
 
 SQLAlchemy-Utils==0.41.2 # SQLAlchemy
 
-click==8.3.0 # Uvicorn
+click==8.3.1 # Uvicorn
 uvicorn==0.38.0 # Uvicorn
 
 iniconfig==2.3.0 # pytest
