@@ -23,7 +23,7 @@ Mako==1.3.10 # Alembic
 MarkupSafe==3.0.3 # Alembic
 alembic==1.17.2 # Alembic
 
-SQLAlchemy-Utils==0.41.2 # SQLAlchemy
+SQLAlchemy-Utils==0.42.1 # SQLAlchemy
 
 click==8.3.1 # Uvicorn
 uvicorn==0.38.0 # Uvicorn
