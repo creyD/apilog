@@ -3,21 +3,21 @@ x-restart-policy: &restart_policy
   restart: unless-stopped
 
 services:
-  # apilog_worker:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   <<: *restart_policy
-  #   container_name: api_worker
-  #   environment:
-  #     - POSTGRES_HOST=apilog_db
-  #     - POSTGRES_PORT=5432
-  #     - POSTGRES_USER=root
-  #     - POSTGRES_PASSWORD=password
-  #     - POSTGRES_DB=apilog
-  #   depends_on:
-  #     apilog_db:
-  #       condition: service_healthy
+  apilog_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    <<: *restart_policy
+    container_name: api_worker
+    environment:
+      - POSTGRES_HOST=apilog_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=apilog
+    depends_on:
+      apilog_db:
+        condition: service_healthy
 
   apilog_db:
     image: postgres
